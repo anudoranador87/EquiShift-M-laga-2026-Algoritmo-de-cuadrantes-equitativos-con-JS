@@ -1,101 +1,79 @@
 // ============================================
-// EQUISHIFT MÁLAGA — Motor v1.0
+// EQUISHIFT MÁLAGA — Motor v1.1
+// Jose Aparicio · Málaga, España · 2026
+// ============================================
 // Problema real: reparto inequitativo de turnos
 // Objetivo: codificar justicia laboral
+// No es un proyecto de tutorial.
+// Resuelve un problema operativo real.
+//
+// Horarios del hotel:
+//   Mañana: 07:00 - 15:00
+//   Tarde:  15:00 - 23:00
+//   Noche:  23:00 - 07:00 (cruza medianoche)
+//
+// Regla: mínimo 16 horas de descanso entre turnos
+// Cada día: 3 trabajan, 2 descansan
 // ============================================
-
-// BASE DE DATOS DE TRABAJADORES
+ 
+ 
+// ============================================
+// BLOQUE 1: BASE DE DATOS DE TRABAJADORES
+// ============================================
+ 
 const trabajadores = [
   {
     id: 1,
     nombre: "Jose María",
     contrato: 37.50,
-    diasTrabajados: 208,
     festivosDisponibles: 13,
     vacacionesDisponibles: 28,
-    diasExtraCubiertos: 0,
-    findesSemanaLibres: 0,
-    turnoAnterior: null,
     calendario: [],
-    vacaciones: [],
-    festivos: [],
-
     turnosNoche: 0
   },
   {
     id: 2,
     nombre: "Salvador",
     contrato: 37.50,
-    diasTrabajados: 208,
     festivosDisponibles: 13,
     vacacionesDisponibles: 28,
-    diasExtraCubiertos: 0,
-    findesSemanaLibres: 0,
-    turnoAnterior: null,
     calendario: [],
-    vacaciones: [],
-    festivos: [],
     turnosNoche: 0
   },
   {
     id: 3,
     nombre: "Miguel",
     contrato: 37.50,
-    diasTrabajados: 208,
     festivosDisponibles: 13,
     vacacionesDisponibles: 28,
-    diasExtraCubiertos: 0,
-    findesSemanaLibres: 0,
-    turnoAnterior: null,
     calendario: [],
-    vacaciones: [],
-    festivos: [], 
     turnosNoche: 0
   },
   {
     id: 4,
     nombre: "Diego",
     contrato: 40,
-    diasTrabajados: 208,
     festivosDisponibles: 14,
     vacacionesDisponibles: 28,
-    diasExtraCubiertos: 0,
-    findesSemanaLibres: 0,
-    turnoAnterior: null,
     calendario: [],
-    vacaciones: [],
-    festivos: [], 
     turnosNoche: 0
   },
   {
     id: 5,
     nombre: "Rafa",
     contrato: 40,
-    diasTrabajados: 208,
     festivosDisponibles: 14,
     vacacionesDisponibles: 28,
-    diasExtraCubiertos: 0,
-    findesSemanaLibres: 0,
-    turnoAnterior: null,
-    calendario: [],
-    vacaciones: [],
-    festivos: [], 
-    // sin turnosNoche — Rafa solo hace noche, nunca cubre a nadie
+    calendario: []
+    // sin turnosNoche — Rafa solo hace noche
   }
 ];
-//TEST DE QUE FUNCIONA
-
-// Vacaciones de Rafa — primera semana de agosto
-trabajadores[4].vacaciones = [
-  "2026-08-01",
-  "2026-08-02",
-  "2026-08-03",
-  "2026-08-04",
-  "2026-08-05",
-  "2026-08-06",
-  "2026-08-07"
-];
-// FESTIVOS MÁLAGA 2026
+ 
+ 
+// ============================================
+// BLOQUE 2: FESTIVOS MÁLAGA 2026
+// ============================================
+ 
 const festivosMalaga2026 = [
   "2026-01-01", // Año Nuevo
   "2026-01-06", // Epifanía del Señor
@@ -112,82 +90,142 @@ const festivosMalaga2026 = [
   "2026-12-08", // Inmaculada Concepción
   "2026-12-25"  // Navidad
 ];
-
-// CLASIFICACIÓN POR CONTRATO
-// Los 37.5h son los únicos que cubren vacaciones
-// y festivos de todos — fuente principal de inequidad
-const jornada375 = trabajadores.filter(function(trabajador) {
-  return trabajador.contrato === 37.50;
+ 
+ 
+// ============================================
+// BLOQUE 3: CLASIFICACIÓN POR CONTRATO
+// ============================================
+// ¿Por qué por contrato y no por nombre?
+// El contrato es el dato estable. Los nombres cambian.
+ 
+const jornada375 = trabajadores.filter(function(t) {
+  return t.contrato === 37.50;
 });
-
-const jornada40 = trabajadores.filter(function(trabajador) {
-  return trabajador.contrato === 40;
+// → Jose María, Salvador, Miguel (13 festivos)
+ 
+const jornada40 = trabajadores.filter(function(t) {
+  return t.contrato === 40;
 });
-
-// MOTOR DE DETECCIÓN DE FINES DE SEMANA
+// → Diego, Rafa (14 festivos)
+ 
+ 
+// ============================================
+// BLOQUE 4: MOTOR DE FINES DE SEMANA
+// ============================================
 // Día 1 de 2026 = jueves — punto de anclaje
-// i % 7 → resto 3 = sábado · resto 4 = domingo
+// resto 3 = sábado · resto 4 = domingo
+ 
 let findeSemana = 0;
-
+ 
 for (let i = 1; i <= 365; i++) {
   if (i % 7 === 3 || i % 7 === 4) {
     findeSemana += 1;
   }
 }
-
-console.log(`Fines de semana en 2026: ${findeSemana}`); // → 104 ✅
-
-// VALIDADOR DE RESTRICCIONES LEGALES
-// Reglas:
-// - Tras noche: no puede trabajar mañana ni tarde
-// - Tras tarde: no puede trabajar mañana
-// - Resto de casos: legal
-const esTurnoLegal = function(turnoAyer, turnoHoy, turnoYaAsignado) {
-   if(turnoYaAsignado) {
-        return false
-    }
-  if (turnoAyer === "noche") {
-    return false;
+ 
+console.log(`Fines de semana en 2026: ${findeSemana}`);
+// → 104 ✅
+ 
+ 
+// ============================================
+// BLOQUE 5: ACTUALIZACIÓN DE CONVENIO
+// ============================================
+ 
+const trabajadoresActualizados = trabajadores.map(function(t) {
+  if (t.contrato === 37.50) {
+    return { ...t, festivosDisponibles: t.festivosDisponibles - 1 };
   }
-  else if (turnoAyer === "tarde") {
-    if (turnoHoy === "mañana") {
-      return false;
-    }
+  return t;
+});
+ 
+ 
+// ============================================
+// BLOQUE 6: VALIDACIÓN DE TURNO LEGAL
+// ============================================
+// Combinaciones ILEGALES (menos de 16h descanso):
+//   tarde → mañana  (8h descanso)
+//   noche → mañana  (noche cruza medianoche)
+//   noche → tarde   (noche cruza medianoche)
+//
+// Todo lo demás es legal.
+ 
+function esTurnoLegal(turnoAyer, turnoHoy) {
+ 
+  // Descanso siempre permite cualquier turno
+  if (turnoAyer === "descanso") {
     return true;
   }
-  return true;
  
-};
-
-// TESTS DEL VALIDADOR
-console.log(esTurnoLegal("mañana", "noche", "mañana")); // → false (ya tiene mañana)
-console.log(esTurnoLegal("libre",  "noche", "tarde"));  // → false (ya tiene tarde)
-console.log(esTurnoLegal("libre",  "noche", null));     // → true  (libre todo el día)
-
-// ASIGNADOR JUSTO DE TURNOS
-// "menosAfectado" = el que menos días extra ha cubierto
-// El turno se asigna al que menos ha pagado hasta ahora
-// Así evitamos que uno llegue a 17 días extra y otro a 0
-const resultado = jornada375.reduce(function(menosAfectado, actual) {
-  if (actual.diasExtraCubiertos < menosAfectado.diasExtraCubiertos) {
-    return actual;
-  } else {
-    return menosAfectado;
+  // tarde → mañana: solo 8h descanso
+  if (turnoAyer === "tarde" && turnoHoy === "mañana") {
+    return false;
   }
-});
-
-// TEST DEL ASIGNADOR — situación real documentada
-jornada375[0].diasExtraCubiertos = 17; // Jose María
-jornada375[1].diasExtraCubiertos = 6;  // Salvador
-jornada375[2].diasExtraCubiertos = 0;  // Miguel
-
-const asignado = jornada375.reduce(function(menosAfectado, actual) {
-  if (actual.diasExtraCubiertos < menosAfectado.diasExtraCubiertos) {
-    return actual;
-  } else {
-    return menosAfectado;
+ 
+  // noche cruza medianoche — noche → mañana y noche → tarde ilegales
+  if (turnoAyer === "noche" && (turnoHoy === "mañana" || turnoHoy === "tarde")) {
+    return false;
   }
-});
-
-console.log("--- Test asignador justo ---");
-console.log(`Turno asignado a: ${asignado.nombre}`); // → Miguel
+ 
+  // Default — todo lo no prohibido está permitido
+  return true;
+}
+ 
+// Tests de verificación
+console.log("--- Tests esTurnoLegal ---");
+console.log(esTurnoLegal("descanso", "mañana"));  // → true  ✅
+console.log(esTurnoLegal("descanso", "noche"));   // → true  ✅
+console.log(esTurnoLegal("mañana", "mañana"));    // → true  ✅
+console.log(esTurnoLegal("mañana", "tarde"));     // → true  ✅
+console.log(esTurnoLegal("mañana", "noche"));     // → true  ✅
+console.log(esTurnoLegal("tarde", "mañana"));     // → false ✅
+console.log(esTurnoLegal("tarde", "tarde"));      // → true  ✅
+console.log(esTurnoLegal("tarde", "noche"));      // → true  ✅
+console.log(esTurnoLegal("noche", "mañana"));     // → false ✅
+console.log(esTurnoLegal("noche", "tarde"));      // → false ✅
+console.log(esTurnoLegal("noche", "noche"));      // → true  ✅
+console.log(esTurnoLegal("noche", "descanso"));   // → true  ✅
+ 
+ 
+// ============================================
+// BLOQUE 7: MOTOR DE ASIGNACIÓN BÁSICO
+// ============================================
+// Versión simple — rotación automática de turnos
+// Los turnos rotan: mañana → tarde → noche → descanso → mañana...
+// i % 4 garantiza la rotación sin bucle extra
+//
+// Antes de asignar cualquier turno — esTurnoLegal comprueba
+// si la combinación con el turno anterior es válida.
+// Si no es legal — ese día no se asigna nada.
+//
+// NOTA: Esta es la versión base.
+// La versión 2.0 usará bloques semanales:
+//   2 semanas mañana · 1 semana tarde · 1 semana rotativo
+// y criterio de equidad: quien menos fines de semana
+// libres acumula, descansa primero.
+ 
+const turnos = ["mañana", "tarde", "noche", "descanso"];
+ 
+// trabajador es una referencia a cualquier objeto del array trabajadores
+// ejemplo: trabajadores[0] = Jose María
+const trabajador = trabajadores[0];
+ 
+for (let i = 1; i <= 365; i++) {
+  const asignarTurno = turnos[i % 4];
+ 
+  if (esTurnoLegal(trabajador.calendario[i - 1], asignarTurno)) {
+    trabajador.calendario.push(asignarTurno);
+  }
+}
+ 
+console.log("--- Calendario Jose María (primeros 10 días) ---");
+console.log(trabajador.calendario.slice(0, 10));
+ 
+ 
+// ============================================
+// PRÓXIMO PASO — v1.2
+// ============================================
+// 1. Aplicar el bucle a todos los trabajadores, no solo a uno
+// 2. Fase 1: asignar fines de semana con criterio de equidad
+//    — quien menos fines de semana libres acumula, descansa primero
+// 3. Fase 2: asignar días laborables restantes
+// 4. Implementar bloques semanales para coherencia de turnos
