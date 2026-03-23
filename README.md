@@ -1,86 +1,102 @@
 # ⚙️ EquiShift Málaga 2026
 
-🇬🇧 English · 🇪🇸 Español
+🇬🇧 English · 🇪🇸 [Español](#español)
+
+> *"EquiShift doesn't just organize shifts — it translates a real injustice into a transparent, reliable algorithm."*
 
 ---
 
-## ⚙️ EquiShift Málaga 2026
-**Fair Shift Management Algorithm for Multi-Contract Teams**
+## Where it started
 
-> "EquiShift doesn't just organize shifts — it translates complex labor law into a transparent, reliable algorithm."
+It wasn't a portfolio idea. It wasn't a project I picked to learn JavaScript.
 
-EquiShift is an intelligent shift management solution designed to eliminate human error, guarantee equitable rest distribution, and strictly comply with labor regulations in Málaga, Andalusia.
+It was January 2026, when the new shift schedule came out at the hotel where I work.
+
+I looked at it. Did the numbers. And what I saw made no sense.
+
+Diego had 70 free weekends a year. I had 22. Rafa had 17.
+The collective agreement says the fair number is 33 per person.
+Nobody was doing it wrong on purpose. They were doing it by hand.
+And when you do it by hand, you forget. Injustice accumulates without anyone seeing it.
+
+That day I decided I was going to prove it. With numbers first — no code, no programming, just maths and common sense. I wanted to build something I could show my manager before the end of the year, with charts, data and evidence. Something that couldn't be ignored.
+
+### The notebook
+
+On January 18th, 2026, I opened a notebook and wrote:
+
+*"Objective: fair weekends for everyone."*
+
+Below that I wrote the names, the contracts, the real numbers:
+Diego 70 · Jose 22 · Salvador 29 · Miguel 26 · Rafa 17.
+And a question: *"What is fair? 33 days per person. How to do it is the question."*
+
+At that point I'd been learning to code for less than a month.
+I didn't know what an array was. I didn't know what an object was.
+But I already had the problem defined with surgical precision.
+
+That notebook exists. It has a date. It has the real data.
+It's the most honest document I have about this project.
+
+### Why code entered the picture
+
+A few weeks into learning JavaScript, something clicked.
+
+I thought: what I'm learning can solve exactly this. Not just the calculations — the entire logic. The rotation. The holidays. The minimum rest between shifts. The mathematical fairness that is impossible to guarantee by hand with five people and two different contract types.
+
+That's when EquiShift stopped being a spreadsheet in my head and became a real code project.
 
 ---
 
-## 📝 Motivation & Purpose
+## What EquiShift does
 
-Manual shift management fails in two critical areas:
+EquiShift is a shift rotation algorithm for hospitality teams with mixed contract types. It solves three problems simultaneously:
 
-- **Rest inequity:** Nearly impossible to ensure all employees receive the same number of free weekends per year
-- **Contractual complexity:** Coordinating 40h and 37.5h contracts generates holiday mismatches and "hour debt"
+**Weekend fairness** — nobody exceeds 33 free weekend days per year. The person with the fewest free weekends rests first.
 
-The injustice was documented before the first line of code: one employee covered 17 extra days in a year. Another covered 0. Same team. Same contract. No system to prevent it.
+**Holiday management** — 14 public holidays in Málaga 2026, national, regional and local. Holidays aren't paid — they're returned as rest days. The algorithm ensures those compensatory days don't fall on weekends, because if they do, the whole team loses out.
 
-EquiShift automates shift assignment through a fair-load algorithm, respecting individual rights and local labor legislation.
+**Night shift coverage** — Rafa has a fixed night shift. When he rests, one of the four rotating staff covers his night. That extra effort is tracked to ensure nobody absorbs it more times than the others.
+
+All of this with mixed contracts: three people on 37.5h and two on 40h, with different entitlements under the agreement.
 
 ---
 
-## 🛠️ Technical Challenges & Business Logic
+## Technical Challenges & Business Logic
 
 The core of this project isn't simply assigning "Morning" or "Afternoon" — it's solving complex constraints with code:
 
-- **Legal Rest Validation:** No worker can be assigned a shift that violates the minimum legal rest period between shifts
-- **Real-time Load Balancing:** Extra shifts are assigned to whoever has covered the least — preventing accumulation
 - **Modular Rotation (%):** A predictable and fair shift wheel for any team size
 - **Localization & Holidays (L10n):** Official Andalusia & Málaga 2026 calendar, including transferred holidays and local events
 - **Individual Balance Management:** Dynamic tracking of days off per employee based on contract type and available balance
-- **Vacation Conflict Rule:** If a colleague is on holiday, no other worker can use a public holiday that day
 
 ---
 
-## 🏗️ Project Status (WIP)
+## Project Status (WIP)
 
-EquiShift is currently in the **logic engine phase**. The priority is a solid, tested data structure before building any visual interface.
+EquiShift is currently in the **architecture and logic engine phase**. The priority is a solid data structure before building any visual interface.
 
-### ✅ Milestones Achieved
+### ✅ Milestones achieved
 
-- **Data Modelling:** Employee objects with contract metadata, day balance tracking, vacation arrays, holiday arrays and shift history
-- **2026 Holiday Dataset:** National, regional (Andalusia) and local (Málaga) holidays integrated
-- **Date Engine Base:** Capable of iterating 365 days with automatic weekend detection — **104 weekends validated ✅**
-- **Contract Classification Engine:** `filter()` logic separating 37.5h and 40h workers into independent rotation groups
-- **Legal Shift Validator — `esTurnoLegal()` v2:** Validates three hard rules before any shift is assigned:
-  1. Worker already has a shift today → `false`
-  2. Worked night yesterday → `false` (no morning or afternoon next day)
-  3. Worked afternoon yesterday → `false` if morning today
-  — **9/9 tests passing ✅**
-- **Fair Load Assigner — `menosAfectado`:** Uses `reduce()` to find the worker with the least accumulated extra days — prevents the 17 vs 0 imbalance from recurring
-- **Vacation tracking:** Each worker now has `vacaciones: []` and `festivos: []` arrays — ready for the 365-day loop
+- **Data modelling** — employee objects with contract metadata and day balance tracking
+- **2026 Holiday Dataset** — national, regional (Andalusia) and local (Málaga) holidays integrated
+- **Contract Classification Engine** — `filter()` logic separating 37.5h and 40h workers into independent rotation groups
+- **Night Shift Tracking** — `turnosNoche` property added to rotating workers
+- **Weekend Detection Engine** — 365-day loop with modular arithmetic (`% 7`) — validated: 104 weekends in 2026 ✅
 
-### ⏳ Next Steps
+### ⏳ Next steps
 
-- [ ] **365-day loop:** Connect `esTurnoLegal()` + `menosAfectado` + `includes()` to assign night cover when Rafa is on holiday
-- [ ] **Night cover logic:** Assign to whoever has the fewest `turnosNoche` and can legally work
-- [ ] **Vacation Algorithm:** Equitable distribution of 28-day holiday blocks with conflict detection
-- [ ] **Visual Dashboard:** Responsive web interface using CSS Grid for annual schedule display
+- [ ] Shift assignment inside the 365-day loop with fair rotation among the 4 rotating workers
+- [ ] Hour compensator for 37.5h contracts
+- [ ] Vacation algorithm — equitable distribution of 28-day holiday blocks
+- [ ] Visual dashboard — responsive web interface with charts and evidence
 
 ---
 
-## 🚀 How It Works
-
-For each day in the 365-day loop, the system:
-
-1. **Checks** if Rafa (fixed night shift) is on holiday or rest → `rafa.vacaciones.includes(fechaHoy)`
-2. **Filters** eligible candidates from 37.5h workers → `esTurnoLegal(turnoAyer, turnoHoy, turnoYaAsignado)`
-3. **Selects** the least affected worker → `reduce()` comparing `turnosNoche`
-4. **Assigns** the shift and increments their `turnosNoche` counter
-5. **Updates** `turnoAnterior` for next day's legal validation
-
----
-
-## ⚖️ Contract Classification Engine
+## Contract Classification Engine
 
 ```javascript
+// STEP 1 — Classify by contract type
 const jornada375 = trabajadores.filter(function(trabajador) {
     return trabajador.contrato === 37.50;
 });
@@ -97,182 +113,177 @@ Holiday entitlements can change by law. The contract type is the stable anchor �
 
 ---
 
-## 🔒 Legal Shift Validator — `esTurnoLegal()`
-
-Three hard rules. In order. No exceptions.
+## Weekend Detection Engine
 
 ```javascript
-const esTurnoLegal = function(turnoAyer, turnoHoy, turnoYaAsignado) {
-  if (turnoYaAsignado) {
-    return false; // can't have two shifts in one day
-  }
-  if (turnoAyer === "noche") {
-    return false; // night → no morning or afternoon next day
-  }
-  else if (turnoAyer === "tarde") {
-    if (turnoHoy === "mañana") {
-      return false; // afternoon → no morning next day
-    }
-    return true;
-  }
-  return true;
-};
-```
+// January 1st 2026 is Thursday — anchor point
+// i % 7 gives position in the week:
+//   remainder 3 = Saturday  ← weekend
+//   remainder 4 = Sunday    ← weekend
 
-**9/9 tests passing:**
-```
-esTurnoLegal("noche",  "mañana", null)    → false ✅
-esTurnoLegal("noche",  "tarde",  null)    → false ✅
-esTurnoLegal("tarde",  "mañana", null)    → false ✅
-esTurnoLegal("tarde",  "tarde",  null)    → true  ✅
-esTurnoLegal("mañana", "noche",  null)    → true  ✅
-esTurnoLegal("libre",  "mañana", null)    → true  ✅
-esTurnoLegal("mañana", "noche",  "mañana")→ false ✅
-esTurnoLegal("libre",  "noche",  "tarde") → false ✅
-esTurnoLegal("libre",  "noche",  null)    → true  ✅
+let findeSemana = 0;
+
+for (let i = 1; i <= 365; i++) {
+  if (i % 7 === 3 || i % 7 === 4) {
+    findeSemana += 1;
+  }
+}
+
+console.log(findeSemana); // → 104 ✅
 ```
 
 ---
 
-## ⚖️ Fair Load Assigner — `menosAfectado`
+## Conceptual Dashboard
 
-Assigns the next extra shift to whoever has covered the least. Not whoever is free — whoever has paid the least so far.
+| Day | Employee 1 | Employee 2 | Employee 3 | Employee 4 | Employee 5 |
+|-----|-----------|-----------|-----------|-----------|-----------|
+| 01/01 | Morning | Afternoon | Day Off | Morning | Night |
+| 02/01 | Afternoon | Day Off | Morning | Afternoon | Night |
+| 03/01 | Day Off | Morning | Afternoon | Day Off | Night |
 
-```javascript
-const asignado = jornada375.reduce(function(menosAfectado, actual) {
-  if (actual.diasExtraCubiertos < menosAfectado.diasExtraCubiertos) {
-    return actual;
-  } else {
-    return menosAfectado;
-  }
-});
+---
 
-// Simulating real documented situation:
-// Jose María: 17 extra days · Salvador: 6 · Miguel: 0
-// → Turno asignado a: Miguel ✅
+## Why this is not a tutorial project
+
+This project has real names, real numbers, and a real injustice that still exists.
+
+When EquiShift works with real data in the hotel — with Diego, Salvador, Miguel and Rafa — that will be the moment that makes everything worth it.
+
+---
+
+## Project timeline
+
+```
+January 2026    → Idea born from real shift schedule
+                  Notebook: "Fair weekends for everyone"
+February 2026   → First line of code — data model, workers array
+March 2026      → Engine validated — 104 weekends confirmed ✅
+April 2026+     → Shift assignment, visual dashboard
 ```
 
 ---
 
-## 💡 Key Features
+## Author
 
-- ⚖️ **Mathematical Fairness:** Distribution based on accumulated load, not availability
-- 🔒 **Legal Compliance:** Hard rules validated before every single assignment
-- 🤖 **Full Automation:** Replaces manual planning, eliminating human error and labor conflicts
-- 📈 **Scalable:** Compatible with any team size and mixed contract types
-- 🖥️ **Visualization-Ready:** Structured data ready to integrate an interactive dashboard
+**Jose Aparicio** — Front-End Developer in training, Málaga, Spain.
 
----
+8+ years in hospitality (UK & Spain). At 39, learning to code to solve a problem I've been watching for years.
 
-## 🏆 Value Proposition
+> *"I didn't know how to code. I learned so I could."*
 
-This is not a tutorial project. It solves a real operational problem from my workplace — where manual shift management caused one employee to cover 17 extra days while another covered 0. Same team. Same contract. No one noticed because no one was counting.
-
-It demonstrates:
-
-- Advanced JS logic (`reduce()`, `filter()`, `includes()`, nested conditionals)
-- Real business rules translated into tested functions
-- Architectural thinking before UI implementation
-- Domain expertise applied directly to code decisions
-
----
-
-## 👨‍💻 Author
-
-**Jose María Aparicio** — Web developer in training, focused on operational efficiency, logical architecture, and solving real human problems through software.
-
-> "Logic is my superpower. Syntax is just the tool."
-
-📧 josemaparicio87@gmail.com · 💼 [LinkedIn](https://www.linkedin.com/in/joseaparicio87/) · 🐙 [GitHub](https://github.com/anudoranador87)
+📧 josemaparicio87@gmail.com
+💼 [LinkedIn](https://www.linkedin.com/in/joseaparicio87/)
+🐙 [GitHub](https://github.com/anudoranador87)
+📓 [Dev Log 365](https://anudoranador87.github.io/Mi-Camino-Web-365/)
 
 ---
 ---
+
+<a id="español"></a>
 
 # ⚙️ EquiShift Málaga 2026
-**Algoritmo de Gestión de Turnos Equitativos para Plantillas Multicontrato**
 
-> "EquiShift no solo organiza turnos; traduce reglas complejas en un sistema transparente y confiable."
-
----
-
-## 📝 Motivación y Propósito
-
-La gestión manual de turnos falla en dos áreas críticas:
-
-- **Inequidad en los descansos:** Casi imposible asegurar que todos los empleados tengan los mismos fines de semana libres al año
-- **Complejidad contractual:** Coordinar jornadas de 40h y 37.5h puede generar desajustes en festivos y "deudas de horas"
-
-La injusticia estaba documentada antes de la primera línea de código: un empleado cubrió 17 días extra en un año. Otro cubrió 0. Mismo equipo. Mismo contrato. Sin sistema que lo evitara.
+> *"EquiShift no solo organiza turnos — traduce una injusticia real en un algoritmo transparente y confiable."*
 
 ---
 
-## 🏗️ Estado del Proyecto (WIP)
+## Dónde empezó todo
 
-### ✅ Hitos Alcanzados
+No fue una idea de portfolio. No fue buscando un proyecto para aprender JavaScript.
 
-- **Modelado de Datos:** Objetos de empleados con metadatos de contrato, saldo de días, arrays de vacaciones, festivos e historial de turnos
-- **Dataset de Festivos 2026:** Nacionales, autonómicos (Andalucía) y locales (Málaga)
-- **Base del Motor de Fechas:** 365 días iterables con detección automática de fines de semana — **104 fines de semana validados ✅**
-- **Motor de Clasificación por Contrato:** `filter()` separando 37.5h y 40h en grupos independientes
-- **Validador Legal — `esTurnoLegal()` v2:** Tres reglas duras en orden. **9/9 tests pasados ✅**
-- **Asignador Justo — `menosAfectado`:** `reduce()` que encuentra al trabajador con menos carga acumulada — evita el desajuste 17 vs 0
-- **Seguimiento de vacaciones:** Cada trabajador tiene `vacaciones: []` y `festivos: []` — listo para el bucle de 365 días
+Fue en enero de 2026, cuando salieron los turnos nuevos del hotel.
 
-### ⏳ Próximos Pasos
+Los miré. Hice los números. Y lo que vi no tenía ningún sentido.
 
-- [ ] **Bucle de 365 días:** Conectar `esTurnoLegal()` + `menosAfectado` + `includes()` para cubrir noches cuando Rafa descansa
-- [ ] **Lógica de cobertura de noches:** Asignar al que menos `turnosNoche` acumule y pueda trabajar legalmente
-- [ ] **Algoritmo de Vacaciones:** Distribución equitativa con detección de conflictos
-- [ ] **Dashboard Visual:** Interfaz web responsive con CSS Grid
+Diego libraba 70 fines de semana al año. Yo libraba 22. Rafa, 17.
+El convenio dice que lo justo son 33 por persona.
+Nadie lo hacía mal a propósito. Lo hacían a mano.
+Y a mano se olvida. A mano se acumula la injusticia sin que nadie la vea.
+
+Ese día decidí que iba a demostrarlo. Con números primero — sin código, sin programación, solo matemática y sentido común. Quería construir algo que le pudiera mostrar a mi jefe antes del cierre del año, con gráficos, con datos, con evidencias. Algo que no se pudiera ignorar.
+
+### La libreta
+
+El 18 de enero de 2026 abrí una libreta y escribí:
+
+*"Objetivo: fines de semana justos para todos."*
+
+Debajo puse los nombres, los contratos, los números reales:
+Diego 70 · Jose 22 · Salvador 29 · Miguel 26 · Rafa 17.
+Y una pregunta: *"¿Qué es lo justo? 33 días por persona. El cómo hacerlo es la cuestión."*
+
+En ese momento llevaba menos de un mes aprendiendo a programar.
+No sabía lo que era un array. No sabía lo que era un objeto.
+Pero ya tenía el problema definido con precisión quirúrgica.
+
+Esa libreta existe. Tiene fecha. Tiene los datos reales.
+Es el documento más honesto que tengo sobre este proyecto.
+
+### Por qué llegó el código
+
+Llevaba unas semanas aprendiendo JavaScript cuando algo hizo clic.
+
+Pensé: lo que estoy aprendiendo puede resolver exactamente esto. No solo los cálculos — la lógica entera. La rotación. Los festivos. Los descansos mínimos entre turnos. La equidad matemática que es imposible garantizar a mano con cinco personas y dos tipos de contrato diferentes.
+
+Ahí EquiShift dejó de ser una hoja de cálculo en mi cabeza y se convirtió en un proyecto de código real.
 
 ---
 
-## 🔒 Validador Legal — `esTurnoLegal()`
+## Qué hace EquiShift
 
-Tres reglas duras. En orden. Sin excepciones.
+EquiShift es un algoritmo de rotación de turnos para plantillas de hostelería con contratos mixtos. Resuelve tres problemas simultáneamente:
 
-```javascript
-const esTurnoLegal = function(turnoAyer, turnoHoy, turnoYaAsignado) {
-  if (turnoYaAsignado) {
-    return false; // no se pueden poner dos turnos en un día
-  }
-  if (turnoAyer === "noche") {
-    return false; // tras noche: no mañana ni tarde
-  }
-  else if (turnoAyer === "tarde") {
-    if (turnoHoy === "mañana") {
-      return false; // tras tarde: no mañana
-    }
-    return true;
-  }
-  return true;
-};
+**Equidad en fines de semana** — nadie supera los 33 días libres en fin de semana al año. El que menos lleva, descansa primero.
+
+**Gestión de festivos** — 14 festivos en Málaga 2026, nacionales, autonómicos y locales. Los festivos no se pagan, se devuelven como descanso. El algoritmo garantiza que esos días compensatorios no caigan en fin de semana, porque si caen en fin de semana perjudican al equipo entero.
+
+**Cobertura de noches** — Rafa tiene turno fijo de noche. Cuando descansa, uno de los cuatro rotativos cubre su noche. Ese esfuerzo extra se contabiliza para que nadie lo asuma más veces que los demás.
+
+Todo esto con contratos mixtos: tres personas a 37.50h y dos a 40h, con derechos distintos por convenio.
+
+---
+
+## Estado del Proyecto (WIP)
+
+### ✅ Hitos alcanzados
+
+- **Modelado de datos** — objetos de empleados con metadatos de contrato y saldo de días
+- **Dataset festivos 2026** — nacionales, autonómicos (Andalucía) y locales (Málaga)
+- **Motor de clasificación por contrato** — `filter()` separando 37.50h y 40h
+- **Control de noches** — propiedad `turnosNoche` en los 4 rotativos
+- **Motor de fines de semana** — bucle 365 días con `% 7` — validado: 104 fines de semana ✅
+
+### ⏳ Próximos pasos
+
+- [ ] Asignación de turnos dentro del bucle de 365 días
+- [ ] Compensador de horas para contratos de 37.50h
+- [ ] Algoritmo de vacaciones — distribución equitativa de 28 días
+- [ ] Dashboard visual — interfaz responsive con gráficos y evidencias
+
+---
+
+## Timeline del proyecto
+
+```
+Enero 2026      → Idea nace de los turnos reales del hotel
+                  Libreta: "Fines de semana justos para todos"
+Febrero 2026    → Primera línea de código — modelo de datos
+Marzo 2026      → Motor validado — 104 fines de semana ✅
+Abril 2026+     → Asignación de turnos, dashboard visual
 ```
 
 ---
 
-## ⚖️ Asignador Justo — `menosAfectado`
+## Autor
 
-El turno extra se asigna al que menos ha cubierto hasta ese momento. No al que está libre — al que menos ha pagado.
+**Jose Aparicio** — Desarrollador Front-End en formación, Málaga.
 
-```javascript
-const asignado = jornada375.reduce(function(menosAfectado, actual) {
-  if (actual.diasExtraCubiertos < menosAfectado.diasExtraCubiertos) {
-    return actual;
-  } else {
-    return menosAfectado;
-  }
-});
-// Jose María: 17 días · Salvador: 6 · Miguel: 0
-// → Turno asignado a: Miguel ✅
-```
+Más de 8 años en hostelería (UK y España). A los 39 años, aprendiendo a programar para resolver un problema que llevo años viendo.
 
----
+> *"No sabía programar. Aprendí para poder hacerlo."*
 
-## 👨‍💻 Autor
-
-**Jose María Aparicio** — Desarrollador web en aprendizaje, enfocado en eficiencia operativa, arquitectura lógica y resolución de problemas reales mediante software.
-
-> "La lógica es mi superpoder. La sintaxis es solo la herramienta."
-
-📧 josemaparicio87@gmail.com · 💼 [LinkedIn](https://www.linkedin.com/in/joseaparicio87/) · 🐙 [GitHub](https://github.com/anudoranador87)
+📧 josemaparicio87@gmail.com
+💼 [LinkedIn](https://www.linkedin.com/in/joseaparicio87/)
+🐙 [GitHub](https://github.com/anudoranador87)
+📓 [Dev Log 365](https://anudoranador87.github.io/Mi-Camino-Web-365/)

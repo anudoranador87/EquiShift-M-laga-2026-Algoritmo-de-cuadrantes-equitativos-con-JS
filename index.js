@@ -228,4 +228,8 @@ console.log(trabajador.calendario.slice(0, 10));
 // 2. Fase 1: asignar fines de semana con criterio de equidad
 //    — quien menos fines de semana libres acumula, descansa primero
 // 3. Fase 2: asignar días laborables restantes
+<<<<<<< HEAD
 // 4. Implementar bloques semanales para coherencia de turnos
+=======
+// 4. Implementar bloques semanales para coherencia de turnos
+>>>>>>> 756d5f3 (updated readme)
