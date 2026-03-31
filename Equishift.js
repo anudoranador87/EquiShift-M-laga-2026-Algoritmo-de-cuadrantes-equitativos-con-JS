@@ -32,15 +32,15 @@ const config = {
     SIMULATIONS: 100,
 }
 
-
+// CORRECCIÓN: Usamos un nombre consistente en minúsculas en todo el archivo.
 // En el original había mezcla de shift_types y SHIFT_TYPES — eso causa ReferenceError.
 const shift_types = {
     MAÑANA: 'Mañana',
     TARDE: 'Tarde',
     NOCHE: 'Noche',
     DESCANSO: 'Descanso',
-    VACACIONES: 'Vacaciones', 
-    FESTIVO: 'Festivo',       
+    VACACIONES: 'Vacaciones', // CORRECCIÓN: faltaba este tipo en el original
+    FESTIVO: 'Festivo',       // CORRECCIÓN: faltaba este tipo en el original
 }
 
 
@@ -119,7 +119,9 @@ class Trabajador {
 // BLOQUE 3: CLASE EQUISHIFT (MOTOR)
 // ============================================
 
-
+// CORRECCIÓN: En el original había constructor(plantilla) { { — doble llave de apertura.
+// Eso creaba un bloque anónimo dentro del constructor y cerraba la clase inmediatamente,
+// dejando todos los métodos flotando fuera de la clase como funciones sueltas.
 class Equishift {
     constructor(plantilla) {
         this.plantilla = plantilla;
@@ -133,6 +135,9 @@ class Equishift {
         this.dias = this.getDiasDelAño(config.YEAR); // CORRECCIÓN: lo precalculamos aquí para no recalcularlo en cada iteración
     }
 
+    // CORRECCIÓN: En el original era getDiasDelAño(year); — el punto y coma después
+    // de los paréntesis convierte la definición en una llamada a función, lo que da SyntaxError.
+    // Regla: los métodos de una clase se definen sin punto y coma al final de la firma.
     getDiasDelAño(year) {
         let dias = [];
         const fechaInicio = new Date(year, 0, 1);
@@ -163,14 +168,16 @@ garantizarPlantillaCompleta(dia) {
         }
     }
 }
-   
+    // CORRECCIÓN: isWeekend y el bloque de equidad de fds estaban fuera de calcularScore
+    // y fuera de la clase. Los movemos al lugar correcto.
     isWeekend(dia) {
         const fecha = new Date(config.YEAR, 0, dia + 1);
         const diaSemana = fecha.getDay();
         return diaSemana === 0 || diaSemana === 6;
     }
 
-    
+    // CORRECCIÓN: En el original calcularScore(empleado, turnoActual, diaActual); tenía
+    // punto y coma en la firma — mismo error que getDiasDelAño.
     calcularScore(empleado, turnoActual, diaActual) {
         let puntosDeCarga = 0;
 
@@ -198,7 +205,7 @@ garantizarPlantillaCompleta(dia) {
         const limiteHoras = empleado.contrato === '40h' ? this.reglas.TECHO_40H : this.reglas.TECHO_37_5H;
         puntosDeCarga += empleado.diasTrabajados * 8 > limiteHoras ? -5 : 0;
 
-      
+        // CORRECCIÓN: En el original se usaba MAX_CONSECUTIVE_WORK_DAYS sin this.reglas.
         // Una variable sin prefijo busca en el scope global y no la encuentra → ReferenceError.
         const diasSeguidosSinDescanso = empleado.getConsecutiveWorkDays(diaActual);
         if (diasSeguidosSinDescanso >= this.reglas.MAX_CONSECUTIVE_WORK_DAYS) {
@@ -211,7 +218,8 @@ garantizarPlantillaCompleta(dia) {
             puntosDeCarga += -5;
         }
 
-       
+        // CORRECCIÓN: El bloque isWeekend estaba fuera de calcularScore en el original,
+        // después del return, por lo que nunca se ejecutaba. Lo movemos dentro, antes del return.
         if (this.isWeekend(diaActual)) {
             const estaLibreHoy = empleado.calendario[diaActual] === shift_types.DESCANSO;
             const totalFds = empleado.fdsFijos + (estaLibreHoy ? 1 : 0);
@@ -238,6 +246,10 @@ garantizarPlantillaCompleta(dia) {
         return false;
     }
 
+    // CORRECCIÓN: barajarTurnos(); — mismo error de punto y coma en firma.
+    // Además este método debe devolver un array de los 4 tipos de turno barajados,
+    // no 365 copias de cada uno (eso era un malentendido en el original — no necesitamos
+    // un array de 1460 elementos para elegir el turno de un solo día).
     barajarTurnos() {
         const turnos = [shift_types.MAÑANA, shift_types.TARDE, shift_types.NOCHE, shift_types.DESCANSO];
         for (let i = turnos.length - 1; i > 0; i--) {
@@ -247,7 +259,7 @@ garantizarPlantillaCompleta(dia) {
         return turnos;
     }
 
-    
+    // CORRECCIÓN: simularAsignacion(); — mismo error de punto y coma en firma.
     simularAsignacion() {
         // Reseteamos los calendarios antes de cada simulación
         this.plantilla.forEach(empleado => empleado.reset());
@@ -258,6 +270,10 @@ garantizarPlantillaCompleta(dia) {
 
             this.plantilla.forEach(empleado => {
 
+                // CORRECCIÓN: En el original se usaba this.shuffle() — ese método no existe.
+                // El método correcto es this.barajarTurnos().
+                // También se usaba SHIFT_TYPES en mayúsculas dentro de shuffle() — inconsistencia
+                // con shift_types en minúsculas definido al inicio del archivo.
                 const turnoLegal = this.barajarTurnos().find(turno => {
                     return (
                         this.esTurnoLegal(empleado.calendario[dia - 1], turno) &&
@@ -290,6 +306,8 @@ garantizarPlantillaCompleta(dia) {
         }
     }
 
+    // CORRECCIÓN: Este método faltaba en el original — sin él, el bucle de Montecarlo
+    // no tiene forma de calcular el score total de una simulación completa.
     calcularScoreTotal() {
         let scoreTotal = 0;
         this.plantilla.forEach(empleado => {
@@ -302,7 +320,8 @@ garantizarPlantillaCompleta(dia) {
         return scoreTotal;
     }
 
-
+    // CORRECCIÓN: El bucle principal de Montecarlo no estaba implementado en el original.
+    // Aquí lo añadimos para completar el motor.
     ejecutarMontecarlo() {
         this.startTime = Date.now();
 
@@ -331,7 +350,7 @@ garantizarPlantillaCompleta(dia) {
         return this.mejorCalendario;
     }
 
-}
+} // Coordinador diario — garantizar exactamente 3 trabajan / 2 descansan
 
          garantizarPlantillaCompleta(calendarios, dia);{
     const trabajando = calendarios.filter(cal => cal[dia] !== shift_types.DESCANSO).length;

@@ -4,68 +4,176 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>EquiShift Málaga 2026 - Visualización</title>
-  <style>
-    body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
-    h1 { text-align: center; margin-bottom: 20px; }
-    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-    th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
-    th { background-color: #eee; }
-    .trabajador { background-color: #d0f0c0; }
-    .festivo { background-color: #ffdede; }
-  </style>
+  <link rel="stylesheet" href="styles.css">
 </head>
+
 <body>
 
-<h1>EquiShift Málaga 2026 - Trabajadores y Festivos</h1>
+  <!-- HEADER -->
+  <header id="header">
+    <img id="header-img" src="SGV2.svg" alt="EquiShift Logo">
 
-<table>
-  <thead>
-    <tr>
-      <th>Nombre</th>
-      <th>Contrato (h)</th>
-      <th>Festivos Disponibles</th>
-      <th>Vacaciones Disponibles</th>
-    </tr>
-  </thead>
-  <tbody id="tablaTrabajadores">
-    <!-- Se llenará con JS -->
-  </tbody>
-</table>
+    <nav id="nav-bar">
+      <ul class="nav-container">
+        <li class="nav-slots"><a class="nav-link" href="#historia">Historia</a></li>
+        <li class="nav-slots"><a class="nav-link" href="#demo">Demo</a></li>
+        <li class="nav-slots"><a class="nav-link" href="#contacto">Contacto</a></li>
+      </ul>
+    </nav>
 
-<script src="index.js"></script>
-<script>
-  // =======================================
-  // Visualización del código original
-  // =======================================
+    <h1>EquiShift Málaga 2026 - Trabajadores y Festivos</h1>
 
-  const tabla = document.getElementById('tablaTrabajadores');
+    <div class="video-container">
+      <iframe 
+        id="video"
+        src="https://www.youtube.com/embed/nlDdcJGhwmA"
+        title="Demostración del algoritmo EquiShift"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        allowfullscreen>
+      </iframe>
+    </div>
+  </header>
 
-  // Función para mostrar los trabajadores
-  function mostrarTrabajadores(lista) {
-    lista.forEach(trabajador => {
-      const fila = document.createElement('tr');
-      fila.classList.add('trabajador');
-      fila.innerHTML = `
-        <td>${trabajador.nombre}</td>
-        <td>${trabajador.contrato}</td>
-        <td>${trabajador.festivosDisponibles}</td>
-        <td>${trabajador.vacacionesDisponibles}</td>
-      `;
-      tabla.appendChild(fila);
-    });
-  }
+  <!-- MAIN (ÚNICO) -->
+  <main>
 
-  // Mostrar ambos grupos de trabajadores (37.5h y 40h)
-  mostrarTrabajadores(jornada375);
-  mostrarTrabajadores(jornada40);
+    <!-- HISTORIA -->
+    <section id="historia" class="section-padding">
+      <div class="container">
+        <div class="content-flex">
 
-  // Opcional: mostrar los festivos de Málaga
-  const festivosDiv = document.createElement('div');
-  festivosDiv.innerHTML = `<h2>Festivos de Málaga 2026</h2><ul>${
-    festivosMalaga2026.map(f => `<li class="festivo">${f}</li>`).join('')
-  }</ul>`;
-  document.body.appendChild(festivosDiv);
-</script>
+          <div class="text-content">
+            <span class="tag">Enero 2026</span>
+            <h2>De una libreta a un algoritmo</h2>
 
+            <p>
+              Todo empezó con un recuento manual en el hotel. Mientras unos libraban 
+              70 fines de semana, otros solo 17. La dificultad no era intencional, 
+              sino consecuencia de la gestión manual de turnos.
+            </p>
+
+            <blockquote>
+              "Objetivo: fines de semana justos para todos."
+              <cite>— Anotación original, 18 de enero</cite>
+            </blockquote>
+
+            <p>
+              EquiShift transforma esos datos en una lógica matemática que garantiza 
+              los 33 días libres definidos por convenio.
+            </p>
+          </div>
+
+          <figure class="image-mockup">
+            <div class="notebook-visual">📔</div>
+          </figure>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- DEMO -->
+    <section id="demo" class="section-padding bg-alt">
+      <div class="container text-center">
+        <span class="tag">Motor de Equidad</span>
+        <h2>Visualiza el Algoritmo en Acción</h2>
+<div class="demo-controls">
+  <button id="run-engine">Generar calendario</button>
+</div>
+
+<div id="resultado"></div>
+        <p>
+          Procesa contratos de 37.5h y 40h, festivos locales de Málaga y rotaciones de noche.
+        </p>
+
+        <div class="features-grid">
+
+          <div class="feature-item">
+            <span class="icon">⚖️</span>
+            <h3>Equidad 33</h3>
+            <p>Nadie supera ni se queda corto en sus días de descanso legales.</p>
+          </div>
+
+          <div class="feature-item">
+            <span class="icon">🌙</span>
+            <h3>Control de Noches</h3>
+            <p>Seguimiento exacto de cobertura del turno nocturno.</p>
+          </div>
+
+          <div class="feature-item">
+            <span class="icon">📅</span>
+            <h3>Festivos Málaga</h3>
+            <p>Calendario oficial 2026 integrado automáticamente.</p>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- CONTACTO -->
+    <section id="contacto" class="section-padding">
+      <div class="container text-center">
+
+        <h2>Únete a la gestión de turnos</h2>
+
+        <p>
+          Introduce tu correo para recibir notificación cuando el dashboard esté disponible.
+        </p>
+
+        <form id="form" action="https://www.freecodecamp.org/email-submit">
+          
+          <div class="form-group">
+            <label for="email" class="sr-only">Correo electrónico</label>
+            <input 
+              type="email" 
+              id="email" 
+              name="email" 
+              placeholder="ej: jose@hotel.com"
+              required>
+          </div>
+
+          <input type="submit" id="submit" value="Enviar datos">
+
+        </form>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="main-footer">
+    <div class="footer-content">
+
+      <div class="footer-section">
+        <img src="SGV2.svg" alt="EquiShift Logo" class="footer-logo">
+        <p>Transformación de gestión manual en lógica automatizada.</p>
+      </div>
+
+      <nav class="footer-section" aria-label="Enlaces del sitio">
+        <h4>Navegación</h4>
+        <ul>
+          <li><a href="#historia">Nuestra Historia</a></li>
+          <li><a href="#video">Demo Algoritmo</a></li>
+          <li><a href="#contacto">Contacto</a></li>
+        </ul>
+      </nav>
+
+      <div class="footer-section">
+        <h4>Autor</h4>
+        <div class="social-links">
+          <a href="https://www.linkedin.com/in/joseaparicio87/" target="_blank">LinkedIn</a>
+          <a href="https://github.com/anudoranador87" target="_blank">GitHub</a>
+          <a href="https://anudoranador87.github.io/Mi-Camino-Web-365/" target="_blank">Dev Log 365</a>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="footer-bottom">
+      <p>&copy; 2026 EquiShift Málaga. Creado por Jose Aparicio.</p>
+    </div>
+  </footer>
+<script src="equishift.js"></script>
+<script src="app.js"></script>
 </body>
 </html>

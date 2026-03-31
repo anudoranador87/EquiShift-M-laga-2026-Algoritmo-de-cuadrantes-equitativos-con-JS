@@ -2,6 +2,8 @@
 
 🇬🇧 English · 🇪🇸 [Español](#español)
 
+![Project Status](https://img.shields.io/badge/status-WIP-yellow) ![JavaScript](https://img.shields.io/badge/language-JavaScript-brightgreen)
+
 > *"EquiShift doesn't just organize shifts — it translates a real injustice into a transparent, reliable algorithm."*
 
 ---
@@ -62,85 +64,117 @@ All of this with mixed contracts: three people on 37.5h and two on 40h, with dif
 
 ---
 
-## Technical Challenges & Business Logic
+## Technical Architecture
 
-The core of this project isn't simply assigning "Morning" or "Afternoon" — it's solving complex constraints with code:
+The engine is built on two OOP classes and a Monte Carlo simulation loop. This is not a simple rotation wheel — it's a constraint-satisfaction engine that searches for the fairest possible schedule across hundreds of simulated years.
 
-- **Modular Rotation (%):** A predictable and fair shift wheel for any team size
-- **Localization & Holidays (L10n):** Official Andalusia & Málaga 2026 calendar, including transferred holidays and local events
-- **Individual Balance Management:** Dynamic tracking of days off per employee based on contract type and available balance
+### Class: `Trabajador`
+
+Represents a single employee. Tracks their full year calendar, consecutive work days, consecutive night shifts, holiday balance, and contract type.
+
+```javascript
+class Trabajador {
+    constructor(nombre, contrato, turnoPreferido, fdsFijos, festivosDisponibles, vacacionesDisponibles) {
+        this.calendario = new Array(365).fill(null);
+        this.turnosNoche = 0;
+        this.diasTrabajados = 0;
+        this.diasDescanso = 0;
+        this.vacacionesDisponibles = new Set(vacacionesDisponibles);
+        // ...
+    }
+
+    getNochesSeguidas(diaDeHoy) { /* counts consecutive nights backwards */ }
+    getConsecutiveWorkDays(diaDeHoy) { /* counts consecutive work days backwards */ }
+}
+```
+
+### Class: `Equishift` (engine)
+
+Manages the full 365-day simulation. Key methods:
+
+- `esTurnoLegal(turnoAnterior, turnoActual)` — enforces minimum rest rules between shifts
+- `barajarTurnos()` — Fisher-Yates shuffle of shift types for random assignment
+- `calcularScore(empleado, turno, dia)` — scores each assignment against fairness rules
+- `calcularScoreTotal()` — aggregates scores across all employees and all 365 days
+- `simularAsignacion()` — runs one full year simulation
+- `ejecutarMontecarlo()` — runs N simulations, keeps the highest-scoring calendar
+
+### Monte Carlo Search
+
+```javascript
+ejecutarMontecarlo() {
+    for (let i = 0; i < this.reglas.SIMULATIONS; i++) {
+        this.simularAsignacion();               // random assignment
+        const score = this.calcularScoreTotal(); // evaluate fairness
+        if (score > this.mejorScore) {
+            this.mejorScore = score;
+            this.mejorCalendario = /* deep copy */;
+        }
+    }
+    return this.mejorCalendario; // best schedule found
+}
+```
+
+### Scoring System
+
+Each assignment is scored against multiple fairness constraints:
+
+| Rule | Penalty |
+|------|---------|
+| Exceeds max consecutive nights | −10 |
+| Exceeds max consecutive work days | −10 |
+| Night → non-rest transition | −5 |
+| Exceeds annual hour ceiling | −5 |
+| Rest ratio below work ratio | −3 |
+| Non-preferred shift assigned | −1 |
+| Weekend equity violated | ±1 |
+| Vacation days still pending | −1 |
 
 ---
 
 ## Project Status (WIP)
 
-EquiShift is currently in the **architecture and logic engine phase**. The priority is a solid data structure before building any visual interface.
-
 ### ✅ Milestones achieved
 
-- **Data modelling** — employee objects with contract metadata and day balance tracking
-- **2026 Holiday Dataset** — national, regional (Andalusia) and local (Málaga) holidays integrated
-- **Contract Classification Engine** — `filter()` logic separating 37.5h and 40h workers into independent rotation groups
-- **Night Shift Tracking** — `turnosNoche` property added to rotating workers
-- **Weekend Detection Engine** — 365-day loop with modular arithmetic (`% 7`) — validated: 104 weekends in 2026 ✅
+- **OOP architecture** — `Trabajador` and `Equishift` classes fully structured
+- **Monte Carlo engine** — simulation loop with score tracking and best-calendar retention
+- **Scoring system** — multi-rule fairness evaluator per assignment per day
+- **Legal shift transitions** — `esTurnoLegal()` enforcing rest rules between shift types
+- **Fisher-Yates shuffle** — unbiased random shift assignment per simulation
+- **Reset mechanism** — full calendar reset between simulations for clean reruns
+- **2026 calendar** — full 365-day date array with weekend detection
 
-### ⏳ Next steps
+### ⏳ Known bugs (active WIP)
 
-- [ ] Shift assignment inside the 365-day loop with fair rotation among the 4 rotating workers
-- [ ] Hour compensator for 37.5h contracts
-- [ ] Vacation algorithm — equitable distribution of 28-day holiday blocks
-- [ ] Visual dashboard — responsive web interface with charts and evidence
+- **Daily staffing coordinator** — no guarantee that exactly 3 work / 2 rest each day
+- **Vacation type mismatch** — `vacacionesDisponibles` Set uses numbers, queried with date strings
+- **`esTurnoLegal` duplication** — two versions exist (class method + standalone function), in conflict
+- **16h rest rule** — current implementation checks shift sequence, not actual hours between shifts
+- **`deudaHistorica` / `festivosCompensados`** — declared but not yet used in scoring
+- **Night→morning penalty** — 2000-point penalty defined in spec, not yet in `calcularScore`
+- **No output layer** — no function to render or export the final calendar
+
+### 🔜 Next steps (in order)
+
+- [ ] Daily coordinator — guarantee exactly 3 working / 2 resting per day
+- [ ] Fix vacation string/number type inconsistency
+- [ ] Unify `esTurnoLegal` into single class method with real hour calculation
+- [ ] Add missing penalties to scoring system
+- [ ] Build output/render function
+- [ ] Connect engine to HTML landing page
 
 ---
 
-## Contract Classification Engine
+## Project Timeline
 
-```javascript
-// STEP 1 — Classify by contract type
-const jornada375 = trabajadores.filter(function(trabajador) {
-    return trabajador.contrato === 37.50;
-});
-// → Jose María, Salvador, Miguel (13 festivos)
-
-const jornada40 = trabajadores.filter(function(trabajador) {
-    return trabajador.contrato === 40;
-});
-// → Diego, Rafa (14 festivos)
 ```
-
-**Why filter by `contrato` and not by `festivosDisponibles`?**
-Holiday entitlements can change by law. The contract type is the stable anchor — always filter by the most stable data point.
-
----
-
-## Weekend Detection Engine
-
-```javascript
-// January 1st 2026 is Thursday — anchor point
-// i % 7 gives position in the week:
-//   remainder 3 = Saturday  ← weekend
-//   remainder 4 = Sunday    ← weekend
-
-let findeSemana = 0;
-
-for (let i = 1; i <= 365; i++) {
-  if (i % 7 === 3 || i % 7 === 4) {
-    findeSemana += 1;
-  }
-}
-
-console.log(findeSemana); // → 104 ✅
+January 2026    → Idea born from real shift schedule
+                  Notebook: "Fair weekends for everyone"
+February 2026   → First line of code — data model, worker objects
+March 2026      → Architecture upgraded to OOP + Monte Carlo engine
+                  Trabajador class · Equishift class · scoring system
+April 2026+     → Bug fixes · daily coordinator · visual dashboard
 ```
-
----
-
-## Conceptual Dashboard
-
-| Day | Employee 1 | Employee 2 | Employee 3 | Employee 4 | Employee 5 |
-|-----|-----------|-----------|-----------|-----------|-----------|
-| 01/01 | Morning | Afternoon | Day Off | Morning | Night |
-| 02/01 | Afternoon | Day Off | Morning | Afternoon | Night |
-| 03/01 | Day Off | Morning | Afternoon | Day Off | Night |
 
 ---
 
@@ -149,18 +183,6 @@ console.log(findeSemana); // → 104 ✅
 This project has real names, real numbers, and a real injustice that still exists.
 
 When EquiShift works with real data in the hotel — with Diego, Salvador, Miguel and Rafa — that will be the moment that makes everything worth it.
-
----
-
-## Project timeline
-
-```
-January 2026    → Idea born from real shift schedule
-                  Notebook: "Fair weekends for everyone"
-February 2026   → First line of code — data model, workers array
-March 2026      → Engine validated — 104 weekends confirmed ✅
-April 2026+     → Shift assignment, visual dashboard
-```
 
 ---
 
@@ -244,22 +266,104 @@ Todo esto con contratos mixtos: tres personas a 37.50h y dos a 40h, con derechos
 
 ---
 
+## Arquitectura Técnica
+
+El motor está construido sobre dos clases OOP y un bucle de simulación Monte Carlo. No es una rueda de rotación simple — es un motor de satisfacción de restricciones que busca el calendario más justo posible entre cientos de años simulados.
+
+### Clase: `Trabajador`
+
+Representa a un empleado. Rastrea su calendario anual completo, días consecutivos trabajados, noches consecutivas, saldo de vacaciones y tipo de contrato.
+
+```javascript
+class Trabajador {
+    constructor(nombre, contrato, turnoPreferido, fdsFijos, festivosDisponibles, vacacionesDisponibles) {
+        this.calendario = new Array(365).fill(null);
+        this.turnosNoche = 0;
+        this.diasTrabajados = 0;
+        this.diasDescanso = 0;
+        this.vacacionesDisponibles = new Set(vacacionesDisponibles);
+        // ...
+    }
+
+    getNochesSeguidas(diaDeHoy) { /* cuenta noches consecutivas hacia atrás */ }
+    getConsecutiveWorkDays(diaDeHoy) { /* cuenta días trabajados consecutivos hacia atrás */ }
+}
+```
+
+### Clase: `Equishift` (motor)
+
+Gestiona la simulación completa de 365 días. Métodos clave:
+
+- `esTurnoLegal(turnoAnterior, turnoActual)` — aplica las reglas de descanso mínimo entre turnos
+- `barajarTurnos()` — algoritmo Fisher-Yates para asignación aleatoria sin sesgo
+- `calcularScore(empleado, turno, dia)` — puntúa cada asignación según reglas de equidad
+- `calcularScoreTotal()` — agrega puntuaciones de todos los empleados y los 365 días
+- `simularAsignacion()` — ejecuta una simulación completa de un año
+- `ejecutarMontecarlo()` — ejecuta N simulaciones, conserva el calendario con mayor puntuación
+
+### Simulación Monte Carlo
+
+```javascript
+ejecutarMontecarlo() {
+    for (let i = 0; i < this.reglas.SIMULATIONS; i++) {
+        this.simularAsignacion();               // asignación aleatoria
+        const score = this.calcularScoreTotal(); // evaluar equidad
+        if (score > this.mejorScore) {
+            this.mejorScore = score;
+            this.mejorCalendario = /* copia profunda */;
+        }
+    }
+    return this.mejorCalendario; // mejor calendario encontrado
+}
+```
+
+### Sistema de Puntuación
+
+Cada asignación se puntúa contra múltiples restricciones de equidad:
+
+| Regla | Penalización |
+|-------|-------------|
+| Supera máximo de noches consecutivas | −10 |
+| Supera máximo de días consecutivos trabajados | −10 |
+| Transición noche → no-descanso | −5 |
+| Supera techo de horas anuales | −5 |
+| Ratio de descanso inferior al de trabajo | −3 |
+| Turno no preferido asignado | −1 |
+| Equidad de fines de semana violada | ±1 |
+| Días de vacaciones pendientes | −1 |
+
+---
+
 ## Estado del Proyecto (WIP)
 
 ### ✅ Hitos alcanzados
 
-- **Modelado de datos** — objetos de empleados con metadatos de contrato y saldo de días
-- **Dataset festivos 2026** — nacionales, autonómicos (Andalucía) y locales (Málaga)
-- **Motor de clasificación por contrato** — `filter()` separando 37.50h y 40h
-- **Control de noches** — propiedad `turnosNoche` en los 4 rotativos
-- **Motor de fines de semana** — bucle 365 días con `% 7` — validado: 104 fines de semana ✅
+- **Arquitectura OOP** — clases `Trabajador` y `Equishift` completamente estructuradas
+- **Motor Monte Carlo** — bucle de simulación con seguimiento de puntuación y retención del mejor calendario
+- **Sistema de puntuación** — evaluador de equidad multi-regla por asignación por día
+- **Transiciones legales de turno** — `esTurnoLegal()` aplicando reglas de descanso entre turnos
+- **Algoritmo Fisher-Yates** — asignación aleatoria sin sesgo por simulación
+- **Mecanismo de reset** — reinicio completo del calendario entre simulaciones
+- **Calendario 2026** — array de 365 fechas completo con detección de fines de semana
 
-### ⏳ Próximos pasos
+### ⏳ Bugs conocidos (WIP activo)
 
-- [ ] Asignación de turnos dentro del bucle de 365 días
-- [ ] Compensador de horas para contratos de 37.50h
-- [ ] Algoritmo de vacaciones — distribución equitativa de 28 días
-- [ ] Dashboard visual — interfaz responsive con gráficos y evidencias
+- **Coordinador diario** — no hay garantía de que exactamente 3 trabajen / 2 descansen cada día
+- **Incompatibilidad de tipos en vacaciones** — el Set usa números, se consulta con strings de fecha
+- **Duplicación de `esTurnoLegal`** — existen dos versiones en conflicto (método de clase + función suelta)
+- **Regla de 16h de descanso** — la implementación actual verifica secuencia de turnos, no horas reales
+- **`deudaHistorica` / `festivosCompensados`** — declarados pero no usados en la puntuación
+- **Penalización noche→mañana** — penalización definida en spec, pendiente en `calcularScore`
+- **Sin capa de output** — no hay función para renderizar o exportar el calendario final
+
+### 🔜 Próximos pasos (en orden)
+
+- [ ] Coordinador diario — garantizar exactamente 3 trabajando / 2 descansando por día
+- [ ] Corregir incompatibilidad de tipos en vacaciones
+- [ ] Unificar `esTurnoLegal` en único método de clase con cálculo de horas reales
+- [ ] Añadir penalizaciones pendientes al sistema de puntuación
+- [ ] Construir función de output/renderizado
+- [ ] Conectar motor con landing page HTML
 
 ---
 
@@ -268,10 +372,19 @@ Todo esto con contratos mixtos: tres personas a 37.50h y dos a 40h, con derechos
 ```
 Enero 2026      → Idea nace de los turnos reales del hotel
                   Libreta: "Fines de semana justos para todos"
-Febrero 2026    → Primera línea de código — modelo de datos
-Marzo 2026      → Motor validado — 104 fines de semana ✅
-Abril 2026+     → Asignación de turnos, dashboard visual
+Febrero 2026    → Primera línea de código — modelo de datos, objetos trabajador
+Marzo 2026      → Arquitectura elevada a OOP + motor Monte Carlo
+                  Clase Trabajador · Clase Equishift · sistema de puntuación
+Abril 2026+     → Corrección de bugs · coordinador diario · dashboard visual
 ```
+
+---
+
+## Por qué esto no es un proyecto de tutorial
+
+Este proyecto tiene nombres reales, números reales y una injusticia real que sigue existiendo.
+
+Cuando EquiShift funcione con los datos reales del hotel — con Diego, Salvador, Miguel y Rafa — ese será el momento que haga que todo valga la pena.
 
 ---
 

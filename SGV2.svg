@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 120">
+  <defs>
+    <style>
+      .logo-teal { fill: #28a79a; }
+      .logo-dark { fill: #1d3649; }
+      .text-main { font-family: 'Segoe UI', Arial, sans-serif; font-weight: 700; font-size: 42px; fill: #1d3649; }
+      .text-sub { font-family: 'Segoe UI', Arial, sans-serif; font-weight: 400; font-size: 18px; fill: #1d3649; letter-spacing: 1px; }
+    </style>
+  </defs>
+
+  <g transform="translate(20, 25)">
+    <path class="logo-teal" d="M35,0 C15.7,0 0,15.7 0,35 C0,54.3 15.7,70 35,70 C54.3,70 70,54.3 70,35 C70,31.5 69.5,28.2 68.5,25 L58,35 C58,47.7 47.7,58 35,58 C22.3,58 12,47.7 12,35 C12,22.3 22.3,12 35,12 C40,12 44.5,13.5 48.3,16.2 L57.5,7 C51.2,2.5 43.5,0 35,0 Z"/>
+    <path class="logo-teal" d="M72,5 L40,37 L30,27 L22,35 L40,53 L80,13 Z"/>
+  </g>
+
+  <text x="110" y="65" class="text-main">EquiShift</text>
+  
+  <text x="112" y="95" class="text-sub">MÁLAGA 2026</text>
+</svg>
