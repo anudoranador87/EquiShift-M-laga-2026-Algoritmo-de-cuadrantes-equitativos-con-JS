@@ -1,429 +1,203 @@
 // ============================================
-// EQUISHIFT MÁLAGA — Motor v1.1 (CORREGIDO)
+// EQUISHIFT MÁLAGA — Motor v1.2 (UI INTEGRADA)
 // Jose Aparicio · Málaga, España · 2026
 // ============================================
-// Problema real: reparto inequitativo de turnos
-// Objetivo: codificar justicia laboral
-// No es un proyecto de tutorial.
-// Resuelve un problema operativo real.
-//
-// Horarios del hotel:
-//   Mañana: 07:00 - 15:00
-//   Tarde:  15:00 - 23:00
-//   Noche:  23:00 - 07:00 (cruza medianoche)
-//
-// Regla: mínimo 16 horas de descanso entre turnos
-// Cada día: 3 trabajan, 2 descansan
-// ============================================
 
-
-// ============================================
-// BLOQUE 1: CONFIGURACIÓN Y CONSTANTES
-// ============================================
 const config = {
     YEAR: 2026,
     MAX_CONSECUTIVE_NIGHT_SHIFTS: 4,
     MIN_REST_HOURS: 16,
     MAX_CONSECUTIVE_WORK_DAYS: 7,
-    TARGET_VACACIONES: 28,
-    TARGET_FDS_LIBRES: 21,
-    TECHO_40H: 2190,
-    TECHO_37_5H: 2050,
-    SIMULATIONS: 100,
+    SIMULATIONS: 50, // Reducido para mayor fluidez en web
 }
 
-
-// En el original había mezcla de shift_types y SHIFT_TYPES — eso causa ReferenceError.
 const shift_types = {
-    MAÑANA: 'Mañana',
-    TARDE: 'Tarde',
-    NOCHE: 'Noche',
-    DESCANSO: 'Descanso',
-    VACACIONES: 'Vacaciones', 
-    FESTIVO: 'Festivo',       
+    MAÑANA: 'M',
+    TARDE: 'T',
+    NOCHE: 'N',
+    DESCANSO: 'L', // Libre
+    VACACIONES: 'V',
+    FESTIVO: 'F',
 }
 
-
-// ============================================
-// BLOQUE 2: CLASE TRABAJADOR
-// ============================================
 class Trabajador {
-    constructor(nombre, contrato, turnoPreferido, fdsFijos, festivosDisponibles, vacacionesDisponibles) {
+    constructor(nombre, contrato, turnoPreferido) {
         this.nombre = nombre;
         this.contrato = contrato;
         this.turnoPreferido = turnoPreferido;
-        this.fdsFijos = fdsFijos;
-        this.festivosDisponibles = festivosDisponibles;
-        this.vacacionesDisponibles = new Set(vacacionesDisponibles);
-        this.festivosCompensados = 0;
-        this.deudaHistorica = 0;
-        this.calendario = [];
-        this.turnosNoche = 0;
+        this.calendario = new Array(365).fill(null);
         this.diasTrabajados = 0;
         this.diasDescanso = 0;
-        this.reset();
+        this.turnosNoche = 0;
     }
 
     reset() {
         this.diasTrabajados = 0;
         this.diasDescanso = 0;
         this.turnosNoche = 0;
-        this.festivosCompensados = 0;
         this.calendario = new Array(365).fill(null);
     }
 
-    addVacaciones(inicio, fin) {
-        for (let i = inicio; i <= fin; i++) {
-            this.calendario[i] = shift_types.VACACIONES;
-            this.vacacionesDisponibles.delete(i);
-        }
-    }
-
-    addFestivo(dia) {
-        this.calendario[dia] = shift_types.FESTIVO;
-        this.festivosDisponibles--;
-    }
-
-    getConsecutiveWorkDays(diaDeHoy = null) {
+    getConsecutiveWorkDays(diaDeHoy) {
         let cuenta = 0;
-        const desde = diaDeHoy !== null ? diaDeHoy : this.calendario.length - 1;
-        for (let i = desde; i >= 0; i--) {
-            if (this.calendario[i] && this.calendario[i] !== shift_types.DESCANSO) {
-                cuenta++;
-            } else {
-                break;
-            }
+        for (let i = diaDeHoy - 1; i >= 0; i--) {
+            if (this.calendario[i] && this.calendario[i] !== shift_types.DESCANSO) cuenta++;
+            else break;
         }
         return cuenta;
     }
 
-    // CORRECCIÓN: Este método estaba completamente fuera de la clase en el original.
-    // Un método que pertenece a Trabajador DEBE estar dentro de las llaves de la clase.
-    // También faltaba el parámetro diaDeHoy en la firma del método.
     getNochesSeguidas(diaDeHoy) {
         let cuenta = 0;
         for (let i = diaDeHoy - 1; i >= 0; i--) {
-            if (this.calendario[i] === shift_types.NOCHE) {
-                cuenta++;
-            } else {
-                break;
-            }
+            if (this.calendario[i] === shift_types.NOCHE) cuenta++;
+            else break;
         }
         return cuenta;
     }
-
-} // ← fin de clase Trabajador
-
-
-// ============================================
-// BLOQUE 3: CLASE EQUISHIFT (MOTOR)
-// ============================================
-
+}
 
 class Equishift {
     constructor(plantilla) {
         this.plantilla = plantilla;
-        this.reglas = config;
-        this.calendarioFinal = null;
-        this.mejorScore = -Infinity;         // CORRECCIÓN: minúscula consistente
-        this.mejorCalendario = null;          // CORRECCIÓN: minúscula consistente
-        this.simulacionesRealizadas = 0;
-        this.startTime = null;
-        this.endTime = null;
-        this.dias = this.getDiasDelAño(config.YEAR); // CORRECCIÓN: lo precalculamos aquí para no recalcularlo en cada iteración
+        this.mejorScore = -Infinity;
+        this.mejorCalendario = null;
+        this.dias = this.getDiasDelAño(config.YEAR);
     }
 
     getDiasDelAño(year) {
         let dias = [];
-        const fechaInicio = new Date(year, 0, 1);
-        const fechaFin = new Date(year, 11, 31);
-        for (let fecha = new Date(fechaInicio); fecha <= fechaFin; fecha.setDate(fecha.getDate() + 1)) {
-            dias.push(new Date(fecha)); // CORRECCIÓN: clonamos con new Date() para no mutar la misma referencia
+        let fecha = new Date(year, 0, 1);
+        while (fecha.getFullYear() === year) {
+            dias.push(new Date(fecha));
+            fecha.setDate(fecha.getDate() + 1);
         }
         return dias;
     }
-garantizarPlantillaCompleta(dia) {
-    const trabajando = this.plantilla.filter(emp => emp.calendario[dia] !== shift_types.DESCANSO).length;
 
-    if (trabajando > 3) {
-        let extras = trabajando - 3;
-        for (let emp of this.plantilla) {
-            if (emp.calendario[dia] !== shift_types.DESCANSO && extras > 0) {
-                emp.calendario[dia] = shift_types.DESCANSO;
-                extras--;
-            }
-        }
-    } else if (trabajando < 3) {
-        let faltantes = 3 - trabajando;
-        for (let emp of this.plantilla) {
-            if (emp.calendario[dia] === shift_types.DESCANSO && faltantes > 0) {
-                emp.calendario[dia] = shift_types.MAÑANA;
-                faltantes--;
-            }
-        }
-    }
-}
-   
-    isWeekend(dia) {
-        const fecha = new Date(config.YEAR, 0, dia + 1);
-        const diaSemana = fecha.getDay();
-        return diaSemana === 0 || diaSemana === 6;
+    esTurnoLegal(turnoAyer, turnoHoy) {
+        if (!turnoAyer || turnoAyer === shift_types.DESCANSO) return true;
+        if (turnoAyer === shift_types.MAÑANA) return true; // M->M, M->T, M->N, M->L son legales
+        if (turnoAyer === shift_types.TARDE && turnoHoy === shift_types.MAÑANA) return false; // Solo 8h descanso
+        if (turnoAyer === shift_types.NOCHE && (turnoHoy === shift_types.MAÑANA || turnoHoy === shift_types.TARDE)) return false; // Cruza medianoche
+        return true;
     }
 
-    
-    calcularScore(empleado, turnoActual, diaActual) {
-        let puntosDeCarga = 0;
-
-        // Penalización por noches seguidas
-        puntosDeCarga += empleado.getNochesSeguidas(diaActual) > this.reglas.MAX_CONSECUTIVE_NIGHT_SHIFTS ? -10 : 0;
-
-        // Penalización por días trabajados seguidos
-        puntosDeCarga += empleado.getConsecutiveWorkDays(diaActual) > this.reglas.MAX_CONSECUTIVE_WORK_DAYS ? -5 : 0;
-
-        // Penalización por falta de descanso proporcional
-        puntosDeCarga += empleado.diasDescanso < empleado.diasTrabajados ? -3 : 0;
-
-        // Penalización por turno no preferido
-        puntosDeCarga += turnoActual !== empleado.turnoPreferido ? -1 : 0;
-
-        // Vacaciones
-        puntosDeCarga += empleado.vacacionesDisponibles.size > 0 ? -1 : 0;
-        puntosDeCarga += empleado.vacacionesDisponibles.size === 0 ? +1 : 0;
-
-        // Fines de semana fijos
-        puntosDeCarga += empleado.fdsFijos > 0 ? -1 : 0;
-        puntosDeCarga += empleado.fdsFijos === 0 ? +1 : 0;
-
-        // Penalización por exceder horas anuales del contrato
-        const limiteHoras = empleado.contrato === '40h' ? this.reglas.TECHO_40H : this.reglas.TECHO_37_5H;
-        puntosDeCarga += empleado.diasTrabajados * 8 > limiteHoras ? -5 : 0;
-
-      
-        // Una variable sin prefijo busca en el scope global y no la encuentra → ReferenceError.
-        const diasSeguidosSinDescanso = empleado.getConsecutiveWorkDays(diaActual);
-        if (diasSeguidosSinDescanso >= this.reglas.MAX_CONSECUTIVE_WORK_DAYS) {
-            puntosDeCarga += -10;
-        }
-
-        // Salud laboral: si ayer fue noche, hoy debe ser descanso
-        const turnoAyer = diaActual > 0 ? empleado.calendario[diaActual - 1] : null;
-        if (turnoAyer === shift_types.NOCHE && turnoActual !== shift_types.DESCANSO) {
-            puntosDeCarga += -5;
-        }
-
-       
-        if (this.isWeekend(diaActual)) {
-            const estaLibreHoy = empleado.calendario[diaActual] === shift_types.DESCANSO;
-            const totalFds = empleado.fdsFijos + (estaLibreHoy ? 1 : 0);
-            puntosDeCarga += totalFds > 0 ? +1 : -1;
-        }
-
-        return puntosDeCarga;
-    }
-
-    // CORRECCIÓN: esTurnoLegal(turnoAnterior, turnoActual); — mismo error de punto y coma en firma.
-    esTurnoLegal(turnoAnterior, turnoActual) {
-        if (turnoAnterior === null || turnoAnterior === shift_types.DESCANSO) {
-            return true;
-        }
-        if (turnoAnterior === shift_types.MAÑANA) {
-            return [shift_types.MAÑANA, shift_types.TARDE, shift_types.NOCHE].includes(turnoActual);
-        }
-        if (turnoAnterior === shift_types.TARDE) {
-            return [shift_types.TARDE, shift_types.NOCHE, shift_types.DESCANSO].includes(turnoActual);
-        }
-        if (turnoAnterior === shift_types.NOCHE) {
-            return [shift_types.NOCHE, shift_types.DESCANSO].includes(turnoActual);
-        }
-        return false;
-    }
-
-    barajarTurnos() {
-        const turnos = [shift_types.MAÑANA, shift_types.TARDE, shift_types.NOCHE, shift_types.DESCANSO];
-        for (let i = turnos.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [turnos[i], turnos[j]] = [turnos[j], turnos[i]];
-        }
-        return turnos;
-    }
-
-    
-    simularAsignacion() {
-        // Reseteamos los calendarios antes de cada simulación
-        this.plantilla.forEach(empleado => empleado.reset());
-
-        for (let dia = 0; dia < this.dias.length; dia++) {
+    calcularScore(empleado, turno, dia) {
+        let score = 0;
+        if (turno === empleado.turnoPreferido) score += 5;
+        if (turno === shift_types.DESCANSO) {
             const fecha = this.dias[dia];
-            const dateStr = fecha.toISOString().split('T')[0];
+            if (fecha.getDay() === 0 || fecha.getDay() === 6) score += 10; // Bonus por librar FDS
+        }
+        return score;
+    }
 
-            this.plantilla.forEach(empleado => {
-
-                const turnoLegal = this.barajarTurnos().find(turno => {
-                    return (
-                        this.esTurnoLegal(empleado.calendario[dia - 1], turno) &&
-                        (turno !== shift_types.NOCHE || empleado.getNochesSeguidas(dia) < this.reglas.MAX_CONSECUTIVE_NIGHT_SHIFTS) &&
-                        (turno !== shift_types.DESCANSO || empleado.getConsecutiveWorkDays(dia) < this.reglas.MAX_CONSECUTIVE_WORK_DAYS) &&
-                        (turno !== shift_types.VACACIONES || empleado.vacacionesDisponibles.has(dateStr)) &&
-                        (turno !== shift_types.FESTIVO || empleado.festivosDisponibles > 0)
-                    );
-                });
-
-                if (turnoLegal) {
-                    empleado.calendario[dia] = turnoLegal;
-
-                    if (turnoLegal === shift_types.NOCHE) {
-                        empleado.turnosNoche++;
-                    }
-                    if (turnoLegal !== shift_types.DESCANSO) {
-                        empleado.diasTrabajados++;
-                    } else {
-                        empleado.diasDescanso++;
-                    }
-                    if (turnoLegal === shift_types.VACACIONES) {
-                        empleado.vacacionesDisponibles.delete(dateStr);
-                    }
-                    if (turnoLegal === shift_types.FESTIVO) {
-                        empleado.festivosDisponibles--;
-                    }
-                }
+    simular() {
+        this.plantilla.forEach(e => e.reset());
+        for (let dia = 0; dia < this.dias.length; dia++) {
+            const turnosDisponibles = [shift_types.MAÑANA, shift_types.TARDE, shift_types.NOCHE, shift_types.DESCANSO, shift_types.DESCANSO];
+            
+            this.plantilla.forEach(emp => {
+                const turno = turnosDisponibles.sort(() => Math.random() - 0.5).find(t => {
+                    return this.esTurnoLegal(emp.calendario[dia-1], t) &&
+                           (t !== shift_types.NOCHE || emp.getNochesSeguidas(dia) < config.MAX_CONSECUTIVE_NIGHT_SHIFTS) &&
+                           (t !== shift_types.DESCANSO || emp.getConsecutiveWorkDays(dia) < config.MAX_CONSECUTIVE_WORK_DAYS);
+                }) || shift_types.DESCANSO;
+                
+                emp.calendario[dia] = turno;
             });
         }
     }
 
-    calcularScoreTotal() {
-        let scoreTotal = 0;
-        this.plantilla.forEach(empleado => {
-            empleado.calendario.forEach((turno, dia) => {
-                if (turno !== null) {
-                    scoreTotal += this.calcularScore(empleado, turno, dia);
-                }
+    ejecutar() {
+        for (let i = 0; i < config.SIMULATIONS; i++) {
+            this.simular();
+            let scoreTotal = 0;
+            this.plantilla.forEach(e => {
+                e.calendario.forEach((t, d) => scoreTotal += this.calcularScore(e, t, d));
             });
-        });
-        return scoreTotal;
-    }
 
-
-    ejecutarMontecarlo() {
-        this.startTime = Date.now();
-
-        for (let i = 0; i < this.reglas.SIMULATIONS; i++) {
-            this.simularAsignacion();
-            const score = this.calcularScoreTotal();
-
-            if (score > this.mejorScore) {
-                this.mejorScore = score;
-                // Guardamos una copia profunda del calendario de cada empleado
-                this.mejorCalendario = this.plantilla.map(emp => ({
-                    nombre: emp.nombre,
-                    calendario: [...emp.calendario],
-                    diasTrabajados: emp.diasTrabajados,
-                    diasDescanso: emp.diasDescanso,
-                    turnosNoche: emp.turnosNoche,
+            if (scoreTotal > this.mejorScore) {
+                this.mejorScore = scoreTotal;
+                this.mejorCalendario = this.plantilla.map(e => ({
+                    nombre: e.nombre,
+                    calendario: [...e.calendario]
                 }));
             }
-
-            this.simulacionesRealizadas++;
         }
-
-        this.endTime = Date.now();
-        console.log(`✅ Montecarlo completado: ${this.simulacionesRealizadas} simulaciones en ${this.endTime - this.startTime}ms`);
-        console.log(`🏆 Mejor score encontrado: ${this.mejorScore}`);
         return this.mejorCalendario;
     }
-
 }
 
-         garantizarPlantillaCompleta(calendarios, dia);{
-    const trabajando = calendarios.filter(cal => cal[dia] !== shift_types.DESCANSO).length;
-    if (trabajando > 3) {
-        // Si hay más de 3 trabajando, forzamos a algunos a descansar
-        let extras = trabajando - 3;
-        for (let i = 0; i < calendarios.length && extras > 0; i++) {
-            if (calendarios[i][dia] !== shift_types.DESCANSO) {
-                calendarios[i][dia] = shift_types.DESCANSO;
-                extras--;
-            }
-        }
-    } else if (trabajando < 3) {
-        // Si hay menos de 3 trabajando, forzamos a algunos a trabajar
-        let faltantes = 3 - trabajando;
-        for (let i = 0; i < calendarios.length && faltantes > 0; i++) {
-            if (calendarios[i][dia] === shift_types.DESCANSO) {
-                calendarios[i][dia] = shift_types.MAÑANA; // Asignamos un turno cualquiera, luego se barajará
-                faltantes--;
-            }
-        }}}
+// --- INTEGRACIÓN CON LA UI ---
+document.getElementById('run-engine').addEventListener('click', () => {
+    const btn = document.getElementById('run-engine');
+    const resDiv = document.getElementById('resultado');
+    
+    btn.innerText = "Generando...";
+    btn.disabled = true;
 
-        //Regla 16h — esTurnoLegal no calcula horas reales entre turnos, solo verifica secuencias de turnos. Aquí añadimos una función para calcular horas reales entre turnos y usarla en esTurnoLegal.
-        calcularHorasEntreTurnos(turnoAnterior, turnoActual);{
-            const horasPorTurno = {
-                [shift_types.MAÑANA]: 8,
-                [shift_types.TARDE]: 8,
-                [shift_types.NOCHE]: 8,
-                [shift_types.DESCANSO]: 24, // Asumimos que un día de descanso da 24 horas de descanso
-                [shift_types.VACACIONES]: 24, // Asumimos que un día de vacaciones da 24 horas de descanso
-                [shift_types.FESTIVO]: 24,    // Asumimos que un día festivo da 24 horas de descanso    
-            };
-            const horasEntre = horasPorTurno[turnoAnterior] + horasPorTurno[turnoActual];
-            return horasEntre >= this.reglas.MIN_REST_HOURS;
-        }
+    // Simulamos un pequeño delay para feedback visual
+    setTimeout(() => {
+        const plantilla = [
+            new Trabajador("Jose", "40h", "Mañana"),
+            new Trabajador("Maria", "40h", "Tarde"),
+            new Trabajador("Pedro", "37.5h", "Mañana"),
+            new Trabajador("Ana", "40h", "Noche"),
+            new Trabajador("Luis", "37.5h", "Tarde")
+        ];
+
+        const motor = new Equishift(plantilla);
+        const resultado = motor.ejecutar();
         
-        //Vacaciones — el Set usa números pero se consulta con strings, corregimos para usar strings en ambos casos.
-        addVacaciones(inicio, fin);{
-            for (let i = inicio; i <= fin; i++) {
-                const diaStr = i.toString(); // Convertimos a string para que coincida con el formato del Set
-                this.calendario[i] = shift_types.VACACIONES;
-                this.vacacionesDisponibles.delete(diaStr);
-            }   
-        }   
-// FESTIVOS COMPENSADOS — añadimos un método para asignar festivos compensados a empleados que no pudieron descansar en festivos reales.
-asignarFestivoCompensado(dia);{
-    this.plantilla.forEach(empleado => {
-        if (empleado.festivosDisponibles > 0 && empleado.calendario[dia] !== shift_types.DESCANSO) {    
-            empleado.calendario[dia] = shift_types.FESTIVO;
-            empleado.festivosDisponibles--;
-            empleado.festivosCompensados++;
-        }   
+        renderizarTabla(resultado, motor.dias);
+        
+        btn.innerText = "Generar nuevo calendario";
+        btn.disabled = false;
+    }, 500);
+});
+
+function renderizarTabla(datos, dias) {
+    const contenedor = document.getElementById('resultado');
+    contenedor.innerHTML = "";
+
+    const tabla = document.createElement('table');
+    tabla.className = "equishift-table";
+    
+    // Header (Días)
+    const header = tabla.createTHead();
+    const rowH = header.insertRow();
+    rowH.insertCell().innerText = "Trabajador";
+    
+    // Solo mostramos el primer mes para la demo visual
+    const diasAMostrar = 31; 
+    for (let i = 1; i <= diasAMostrar; i++) {
+        const cell = rowH.insertCell();
+        cell.innerText = i;
+        const fecha = dias[i-1];
+        if (fecha.getDay() === 0 || fecha.getDay() === 6) cell.classList.add('weekend');
+    }
+
+    // Body (Turnos)
+    const body = tabla.createTBody();
+    datos.forEach(emp => {
+        const row = body.insertRow();
+        row.insertCell().innerText = emp.nombre;
+        for (let i = 0; i < diasAMostrar; i++) {
+            const cell = row.insertCell();
+            const turno = emp.calendario[i];
+            cell.innerText = turno;
+            cell.className = `shift-${turno.toLowerCase()}`;
+        }
     });
+
+    contenedor.appendChild(tabla);
+    
+    // Añadir botón de exportación
+    const exportBtn = document.createElement('button');
+    exportBtn.innerText = "Exportar a PDF (Próximamente)";
+    exportBtn.className = "export-btn";
+    exportBtn.onclick = () => alert("Esta funcionalidad requiere la librería jspdf, ¡estamos en ello!");
+    contenedor.appendChild(exportBtn);
 }
-
-// Penalización noche→mañana (2000 puntos que tienes en tus notas) — no está en calcularScore porque es una regla de salud laboral que prohíbe la asignación, no una preferencia que se puede penalizar. La implementamos directamente en esTurnoLegal.
-function esTurnoLegal(turnoAyer, turnoHoy) {
-  // Si ayer fue descanso o no hay turno anterior, cualquier turno hoy es legal
-  if (turnoAyer === null || turnoAyer === "descanso") {
-  }}
-
-
-//Output Si ayer fue mañana, hoy no puede ser descanso (solo 8h descanso)
-  if (turnoAyer === "mañana" && turnoHoy === "descanso") {
-    return false;
-  }
-  // Si ayer fue tarde, hoy no puede ser mañana (solo 8h descanso)
-  if (turnoAyer === "tarde" && turnoHoy === "mañana") {
-    return false;
-  }
-  // Si ayer fue noche, hoy no puede ser mañana ni tarde (cruza medianoche)
-  if (turnoAyer === "noche" && (turnoHoy === "mañana" || turnoHoy === "tarde")) {
-    return false;
-  }
-  // Default — todo lo no prohibido está permitido
-  return true;
-
-// Tests de verificación
-console.log("--- Tests esTurnoLegal ---");
-console.log(esTurnoLegal("descanso", "mañana"));  // → true  ✅
-console.log(esTurnoLegal("descanso", "noche"));   // → true  ✅             
-
-console.log(esTurnoLegal("mañana", "mañana"));    // → true  ✅
-console.log(esTurnoLegal("mañana", "tarde"));     // → true  ✅
-console.log(esTurnoLegal("mañana", "noche"));     // → true  ✅
-console.log(esTurnoLegal("mañana", "descanso"));  // → false ✅     
-console.log(esTurnoLegal("tarde", "mañana"));     // → false ✅
-console.log(esTurnoLegal("tarde", "tarde"));      // → true  ✅
-console.log(esTurnoLegal("tarde", "noche"));      // → true  ✅
-console.log(esTurnoLegal("tarde", "descanso"));  // → true  ✅
-console.log(esTurnoLegal("noche", "mañana"));     // → false ✅
-console.log(esTurnoLegal("noche", "tarde"));      // → false ✅
-console.log(esTurnoLegal("noche", "noche"));      // → true  ✅
-console.log(esTurnoLegal("noche", "descanso"));  // → true  ✅  
-
